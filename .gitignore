@@ -3,3 +3,6 @@
 
 # Ignore swap files.
 .*.sw*
+
+# Ignore .metadata folder.
+.metadata
