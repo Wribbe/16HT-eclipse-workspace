@@ -1,0 +1,18 @@
+Exercise 1:
+
+Prevent the output of System.out to be mixed by using a semaphor.
+To use a semaphor, import the package: se.lth.cs.realtime.semaphore.*, and 
+instanciate a semaphor as follows:
+
+	Semaphor mutex = new MutexSem();
+	
+	[...]
+	mutex.take();
+	System.out.print(line1);
+	System.out.print(line2);
+	[...]
+	mutex.give();
+
+The section between the take() and give() operation becomes a critical section,
+which means that only the thread that has taken the mutex semaphor can print 
+to System out.
