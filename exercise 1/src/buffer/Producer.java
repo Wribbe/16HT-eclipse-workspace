@@ -13,9 +13,10 @@ class Producer extends Thread {
 		String producedData = "";
 		try {
 			while (true) {
+				System.out.println("Looping inside producer run().");
 				if (producedData.length()>75) break;
 				producedData = new String("Hi! "+producedData);
-				sleep(1000); // It takes a second to obtain data.
+				//sleep(1000); // It takes a second to obtain data.
 				theBuffer.putLine(producedData);
 			}
 		}

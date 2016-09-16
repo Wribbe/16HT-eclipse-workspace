@@ -27,10 +27,13 @@ public class RTsemBuffer {
 		System.out.println("\n\n"+"RTsemBuffer: Threads are running ...");
 		try {
 			p.join();
+			System.out.println("Joined p.");
 			// Give consumer 10s to complete its work, then stop it.
-			Thread.sleep(10000);
+			//Thread.sleep(10000);
 			c.interrupt(); // Tell consumer to stop.
+			System.out.println("Interrupdet c.");
 			c.join(); // Wait until really stopped.
+			System.out.println("Joined c.");
 		}
 		catch (InterruptedException e) {/* Continue termination...*/};
 		System.out.println("\n"+"RTsemBuffer: Execution completed!");

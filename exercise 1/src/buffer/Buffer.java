@@ -18,11 +18,21 @@ class Buffer {
 	}
 
 	void putLine(String input) {
+		System.out.println("Waitning for free.");
 		free.take(); // Wait for buffer empty.
+		System.out.println("Free taken.");
+		System.out.println("Waitning for mutex.");
 		mutex.take(); // Wait for exclusive access.
+		System.out.println("Mutex taken.");
+		System.out.println("New buffer.");
 		buffData = new String(input); // Store copy of object.
+		System.out.println("Getting rid of mutex.");
 		mutex.give(); // Allow others to access.
+		System.out.println("Mutex gone.");
+		System.out.println("Getting rid of avail.");
 		avail.give(); // Allow others to get line.
+		System.out.println("Avail gone.");
+		free.give();
 	}
 
 	String getLine() {

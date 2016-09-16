@@ -11,10 +11,11 @@ class Consumer extends Thread {
 	}
 	public void run() {
 		try {
-			sleep(10000); // 10s until work starts.
-			while (true) {
-				System.out.println(theBuffer.getLine());
-			}
+			System.out.println("Inside run() in Consumer.");
+			//sleep(10000); // 10s until work starts.
+//			while (true) {
+//				//System.out.println(theBuffer.getLine());
+//			}
 		}
 		catch (Exception e) {/* Let thread terminate. */};
 	} // run
