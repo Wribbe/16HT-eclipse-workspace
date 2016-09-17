@@ -24,3 +24,10 @@ Exercise 1:
 	By handling the semaphore in the data-structure class instead of the
 	methods/classes that use the data-structure, the users of the structure 
 	don't need to be informed about how the semaphor handling is done.
+
+1.5)
+
+	If the order is changed, a full buffer will cause the free mutex to be blocked 
+	while the producer can take the mutex. Since the producer has the mutex, the 
+	consumer can't get the mutex, and can't continue to release the free mutex,
+	creating a deadlock.
