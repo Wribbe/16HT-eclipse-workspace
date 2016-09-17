@@ -35,7 +35,7 @@ public class RTsemBuffer {
 			c.join(); // Wait until really stopped.
 			System.out.println("Joined c.");
 		}
-		catch (InterruptedException e) {/* Continue termination...*/};
+		catch (java.lang.InterruptedException e) {/* Continue termination...*/};
 		System.out.println("\n"+"RTsemBuffer: Execution completed!");
 	}
 } // RTsemBuffer

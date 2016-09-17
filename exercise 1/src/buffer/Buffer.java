@@ -9,12 +9,22 @@ class Buffer {
 	Semaphore mutex; // For mutual exclusion blocking.
 	Semaphore free; // For buffer full blocking.
 	Semaphore avail; // For blocking when no data is available.
-	String buffData; // The actual buffer.
+
+	final static int bufferSize = 8;
+	int currentIndex = 0;
+	String[] buffData; // The actual buffer.
 
 	Buffer() {
 		mutex = new MutexSem();
-		free = new CountingSem(1);
+		free = new CountingSem(bufferSize);
 		avail = new CountingSem();
+		buffData = new String[bufferSize];  
+	}
+	
+	private int nextPos() {
+		int current = currentIndex;
+		currentIndex = (currentIndex+1) % bufferSize;
+		return current;
 	}
 
 	void putLine(String input) {
@@ -25,7 +35,7 @@ class Buffer {
 		mutex.take(); // Wait for exclusive access.
 		System.out.println("Mutex taken.");
 		System.out.println("New buffer.");
-		buffData = new String(input); // Store copy of object.
+		buffData[nextPos()] = new String(input);
 		System.out.println("Getting rid of mutex.");
 		mutex.give(); // Allow others to access.
 		System.out.println("Mutex gone.");
@@ -42,9 +52,10 @@ class Buffer {
 		// ...
 		avail.take(); // Wait for data.
 		mutex.take(); // Mutual exclusion.
-		String ans = buffData; // Get the data.
+		String ans = buffData[currentIndex]; // Get the data.
+		buffData[currentIndex] = null; // Reset buffer element.
+		nextPos(); // Advance position in buffer.
 		mutex.give(); // Return mutual exclusion.
-		buffData = null; // Reset buffer.
 		free.give();  // Signal tkat the buffer is free.
 		return ans;
 	}
