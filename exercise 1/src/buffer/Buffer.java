@@ -32,7 +32,6 @@ class Buffer {
 		System.out.println("Getting rid of avail.");
 		avail.give(); // Allow others to get line.
 		System.out.println("Avail gone.");
-		free.give();
 	}
 
 	String getLine() {
@@ -41,6 +40,12 @@ class Buffer {
 		// calling process is delayed until a line becomes available.
 		// A caller of putLine hanging on buffer full should be released.
 		// ...
-		return null;
+		avail.take(); // Wait for data.
+		mutex.take(); // Mutual exclusion.
+		String ans = buffData; // Get the data.
+		mutex.give(); // Return mutual exclusion.
+		buffData = null; // Reset buffer.
+		free.give();  // Signal tkat the buffer is free.
+		return ans;
 	}
 }

@@ -29,7 +29,7 @@ public class RTsemBuffer {
 			p.join();
 			System.out.println("Joined p.");
 			// Give consumer 10s to complete its work, then stop it.
-			//Thread.sleep(10000);
+			Thread.sleep(10000);
 			c.interrupt(); // Tell consumer to stop.
 			System.out.println("Interrupdet c.");
 			c.join(); // Wait until really stopped.
