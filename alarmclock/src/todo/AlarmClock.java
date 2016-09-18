@@ -8,12 +8,12 @@ public class AlarmClock extends Thread {
 	private static ClockInput	input;
 	private static ClockOutput	output;
 	private static Semaphore	sem; 
-	private static TimeCrystal 	time;
+	private static TimeCrystal 	timeCrystal;
 
 	public AlarmClock(ClockInput i, ClockOutput o) {
 		input = i;
 		output = o;
-		time = new TimeCrystal(output);
+		timeCrystal = new TimeCrystal(output);
 		sem = input.getSemaphoreInstance();
 	}
 
@@ -23,10 +23,15 @@ public class AlarmClock extends Thread {
 	// below is a simple alarmclock thread that beeps upon 
 	// each keypress. To be modified in the lab.
 	public void run() {
-		time.run();
+		timeCrystal.start();
 		while (true) {
 			sem.take();
-			output.doAlarm();
+			int currentChoice = input.getChoice(); 
+			int currentValue = input.getValue();
+			if (currentChoice == ClockInput.SET_TIME) {
+				timeCrystal.setTime(currentValue);
+			} else if (currentChoice == ClockInput.SET_ALARM) {
+			}
 		}
 	}
 }
