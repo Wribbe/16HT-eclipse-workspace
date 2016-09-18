@@ -1,6 +1,10 @@
 package todo;
 import done.*;
 
+import se.lth.cs.realtime.semaphore.Semaphore;
+import se.lth.cs.realtime.semaphore.MutexSem;
+import se.lth.cs.realtime.semaphore.CountingSem;
+
 public class TimeCrystal extends Thread {
 	
 	private final int standardSleep = 1000;
@@ -16,19 +20,42 @@ public class TimeCrystal extends Thread {
 	private int minFac = 100;
 	private int timeZone = 2;
 	
+	/* Time Crystal Semaphors. */
+	private Semaphore timeWrite;
+	private Semaphore startAlarm;
+
 	public TimeCrystal(ClockOutput output) {
 		this.output = output;
 		sleepDelta = 0;
 		time = getCurrentTime();
 		currentSleep = standardSleep;
 		output.showTime(time);
+		
+		/* Set up semaphores. */
+		timeWrite = new MutexSem();
+		startAlarm = new CountingSem();
 	}
 	
 	public void setTime(int time) {
 		/* Set TimeCrystal to specific time. */
+		timeWrite.take();
 		this.time = time;
+		timeWrite.give();
 	}
 	
+	public Semaphore getAlarmSempahor() {
+		/* Return instance of startAlarm Semaphore. */
+		return startAlarm;
+	}
+	
+	public void run() {
+		while (true) {
+			driftcorrectedSleep();
+			setTime(nextSecond());
+			output.showTime(time);
+		}
+	}
+
 	private int getCurrentTime() {
 		/* Claculate the current time based on currentTimeMillis(). */
 		long millis = System.currentTimeMillis();
@@ -51,7 +78,7 @@ public class TimeCrystal extends Thread {
 		return time;
 	}
 	
-	private int incrementTime() {
+	private int nextSecond() {
 		/* Deconstruct the time int into its components. */
 		/* Format: int time = hhmmss. */
 		long tempTime = time;
@@ -104,14 +131,6 @@ public class TimeCrystal extends Thread {
 							 " Diff: "+timeDiff+
 							 " Delta: "+sleepDelta;
 			System.out.println(message);
-		}
-	}
-
-	public void run() {
-		while (true) {
-			driftcorrectedSleep();
-			time = incrementTime();
-			output.showTime(time);
 		}
 	}
 }

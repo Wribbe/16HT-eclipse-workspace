@@ -1,7 +1,6 @@
 package todo;
 import done.*;
 import se.lth.cs.realtime.semaphore.Semaphore;
-import se.lth.cs.realtime.semaphore.MutexSem;
 
 public class AlarmClock extends Thread {
 
