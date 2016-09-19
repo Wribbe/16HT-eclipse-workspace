@@ -23,24 +23,27 @@ public class TimeCrystal extends Thread {
 	/* Alarm variables: */
 	private int alarm = -1;
 	private int currentAlarm = 0;
-	private int maxAlarm = 0;
+	private int maxAlarm = 20;
 	private boolean alarmOn = false;
 	
 	/* Time Crystal Semaphors. */
 	private Semaphore timeWrite;
-	private Semaphore alarmOff;
+	private Semaphore alarmToggle;
+	
+	public void buttonPushed() {
+		setAlarmOff();
+	}
 
 	public TimeCrystal(ClockOutput output) {
 		this.output = output;
 		sleepDelta = 0;
 		time = getCurrentTime();
-		setAlarm(time+3);
 		currentSleep = standardSleep;
 		output.showTime(time);
 		
 		/* Set up semaphores. */
 		timeWrite = new MutexSem();
-		alarmOff = new MutexSem();
+		alarmToggle = new MutexSem();
 	}
 	
 	public void setTime(int time) {
@@ -51,7 +54,7 @@ public class TimeCrystal extends Thread {
 	}
 	
 	public void setAlarm(int alarmtime) {
-		/* Set TimeCrystal alarm varaible. */
+		/* Set TimeCrystal alarm variable. */
 		alarm = alarmtime;
 	}
 	
@@ -65,21 +68,23 @@ public class TimeCrystal extends Thread {
 	}
 	
 	public void setAlarmOff() {
-		alarmOff.take();
+		/* Turn of alarm. */
+		alarmToggle.take();
 		alarmOn = false;
 		currentAlarm = 0;
-		alarmOff.give();
+		alarmToggle.give();
 	}
 
-	public void alarmOn() {
-		alarmOff.take();
+	public void setAlarmOn() {
+		/* Turn on alarm. */
+		alarmToggle.take();
 		alarmOn = true;
 		currentAlarm = 0;
-		alarmOff.give();
+		alarmToggle.give();
 	}
 
 	private int getCurrentTime() {
-		/* Claculate the current time based on currentTimeMillis(). */
+		/* Calculate the current time based on currentTimeMillis(). */
 		long millis = System.currentTimeMillis();
 		long seconds = (millis/1000) % 60; 
 		long minutes = (millis/(1000 * 60)) % 60;
@@ -88,7 +93,7 @@ public class TimeCrystal extends Thread {
 		/* Adjust for timeZone. */
 		hours += timeZone;
 		
-		/* Calcualte and return a current time int with correct format. */
+		/* Calculate and return a current time int with correct format. */
 		return assembleTime(hours, minutes, seconds);
 	}
 	
@@ -133,7 +138,7 @@ public class TimeCrystal extends Thread {
 			System.out.println(message);
 		}
 		
-		/* Re-assemble time varaible and return. */
+		/* Re-assemble time variable and return. */
 		return assembleTime(hours, minutes, seconds);
 	}
 	
@@ -161,11 +166,12 @@ public class TimeCrystal extends Thread {
 	private boolean checkAlarm() {
 		/* Check if it's time for an alarm, trigger it if true. */
 		if (time == alarm) {
+			setAlarmOn();
 		}
 		if (alarmOn) { 
 			currentAlarm++;
 			output.doAlarm();
-			if (currentAlarm == maxAlarm) {
+			if (currentAlarm >= maxAlarm) {
 				setAlarmOff();
 			}
 		}

@@ -8,7 +8,6 @@ public class AlarmClock extends Thread {
 	private static ClockOutput	output;
 	private static Semaphore	sem; 
 	private static TimeCrystal 	timeCrystal;
-	private static Beeper beeper;
 
 	public AlarmClock(ClockInput i, ClockOutput o) {
 
