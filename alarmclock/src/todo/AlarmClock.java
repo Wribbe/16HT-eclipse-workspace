@@ -8,6 +8,7 @@ public class AlarmClock extends Thread {
 	private static ClockOutput	output;
 	private static Semaphore	sem; 
 	private static TimeCrystal 	timeCrystal;
+	private Storage storage;
 
 	public AlarmClock(ClockInput i, ClockOutput o) {
 
@@ -15,9 +16,10 @@ public class AlarmClock extends Thread {
 		input = i;
 		output = o;
 		sem = input.getSemaphoreInstance();
+		storage = new Storage(output);
 
 		/* Set up TimeCrystal. */
-		timeCrystal = new TimeCrystal(output);
+		timeCrystal = new TimeCrystal(storage);
 	}
 
 	// The AlarmClock thread is started by the simulator. No
@@ -27,16 +29,20 @@ public class AlarmClock extends Thread {
 	// each keypress. To be modified in the lab.
 	public void run() {
 		timeCrystal.start();
+		int previousChoice = -1;
 		while (true) {
 			sem.take();
+			storage.setAlarmOff();
 			int currentChoice = input.getChoice(); 
-			int currentValue = input.getValue();
-			timeCrystal.buttonPushed();
-			if (currentChoice == ClockInput.SET_TIME) {
-				timeCrystal.setTime(currentValue);
-			} else if (currentChoice == ClockInput.SET_ALARM) {
-				timeCrystal.setAlarm(currentValue);
+			if (currentChoice != previousChoice) {
+				int currentValue = input.getValue();
+				if (previousChoice == ClockInput.SET_TIME) {
+					storage.setTime(currentValue);
+				} else if (previousChoice == ClockInput.SET_ALARM) {
+					storage.setAlarm(currentValue);
+				}
 			}
+			previousChoice = currentChoice;
 		}
 	}
 }
