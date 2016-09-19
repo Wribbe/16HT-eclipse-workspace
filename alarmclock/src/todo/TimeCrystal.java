@@ -12,28 +12,28 @@ public class TimeCrystal extends Thread {
 	private ClockOutput output;
 
 	/* Debug printout flag. */
-	private boolean DEBUG = true;
+	private boolean DEBUG = false;
 	
 	/* Time variables: */
 	private int time;
 	private int hourFac = 10000;
 	private int minFac = 100;
 	private int timeZone = 2;
+	private int alarm = -1;
 	
 	/* Time Crystal Semaphors. */
-	private Semaphore timeWrite;
-	private Semaphore startAlarm;
+	private static Semaphore timeWrite;
 
 	public TimeCrystal(ClockOutput output) {
 		this.output = output;
 		sleepDelta = 0;
 		time = getCurrentTime();
+		setAlarm(time+3);
 		currentSleep = standardSleep;
 		output.showTime(time);
 		
 		/* Set up semaphores. */
 		timeWrite = new MutexSem();
-		startAlarm = new CountingSem();
 	}
 	
 	public void setTime(int time) {
@@ -43,15 +43,18 @@ public class TimeCrystal extends Thread {
 		timeWrite.give();
 	}
 	
-	public Semaphore getAlarmSempahor() {
-		/* Return instance of startAlarm Semaphore. */
-		return startAlarm;
+	public void setAlarm(int alarmtime) {
+		/* Set TimeCrystal alarm varaible. */
+		alarm = alarmtime;
 	}
 	
 	public void run() {
 		while (true) {
 			driftcorrectedSleep();
 			setTime(nextSecond());
+			if (checkAlarm()) {
+				output.doAlarm();
+			}
 			output.showTime(time);
 		}
 	}
@@ -103,11 +106,13 @@ public class TimeCrystal extends Thread {
 		}
 		
 		/* Debug printout message. */
-		String message = "Time: "+time+
-						 " Hours: "+hours+
-						 " Minutes: "+minutes+
-						 " Seconds: "+seconds;
-		System.out.println(message);
+		if (DEBUG) {
+			String message = "Time: "+time+
+							 " Hours: "+hours+
+							 " Minutes: "+minutes+
+							 " Seconds: "+seconds;
+			System.out.println(message);
+		}
 		
 		/* Re-assemble time varaible and return. */
 		return assembleTime(hours, minutes, seconds);
@@ -132,5 +137,16 @@ public class TimeCrystal extends Thread {
 							 " Delta: "+sleepDelta;
 			System.out.println(message);
 		}
+	}
+	
+	private boolean checkAlarm() {
+		/* Check if it's time for an alarm, trigger it if true. */
+		if (time == alarm) {
+			return true;
+		}
+	}
+	
+	private void beep() {
+
 	}
 }
