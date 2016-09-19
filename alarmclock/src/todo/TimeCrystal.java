@@ -19,10 +19,16 @@ public class TimeCrystal extends Thread {
 	private int hourFac = 10000;
 	private int minFac = 100;
 	private int timeZone = 2;
+	
+	/* Alarm variables: */
 	private int alarm = -1;
+	private int currentAlarm = 0;
+	private int maxAlarm = 0;
+	private boolean alarmOn = false;
 	
 	/* Time Crystal Semaphors. */
-	private static Semaphore timeWrite;
+	private Semaphore timeWrite;
+	private Semaphore alarmOff;
 
 	public TimeCrystal(ClockOutput output) {
 		this.output = output;
@@ -34,6 +40,7 @@ public class TimeCrystal extends Thread {
 		
 		/* Set up semaphores. */
 		timeWrite = new MutexSem();
+		alarmOff = new MutexSem();
 	}
 	
 	public void setTime(int time) {
@@ -52,11 +59,23 @@ public class TimeCrystal extends Thread {
 		while (true) {
 			driftcorrectedSleep();
 			setTime(nextSecond());
-			if (checkAlarm()) {
-				output.doAlarm();
-			}
+			checkAlarm();
 			output.showTime(time);
 		}
+	}
+	
+	public void setAlarmOff() {
+		alarmOff.take();
+		alarmOn = false;
+		currentAlarm = 0;
+		alarmOff.give();
+	}
+
+	public void alarmOn() {
+		alarmOff.take();
+		alarmOn = true;
+		currentAlarm = 0;
+		alarmOff.give();
 	}
 
 	private int getCurrentTime() {
@@ -142,11 +161,14 @@ public class TimeCrystal extends Thread {
 	private boolean checkAlarm() {
 		/* Check if it's time for an alarm, trigger it if true. */
 		if (time == alarm) {
-			return true;
 		}
-	}
-	
-	private void beep() {
-
+		if (alarmOn) { 
+			currentAlarm++;
+			output.doAlarm();
+			if (currentAlarm == maxAlarm) {
+				setAlarmOff();
+			}
+		}
+		return false;
 	}
 }
