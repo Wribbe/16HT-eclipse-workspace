@@ -42,6 +42,7 @@ public class AlarmClock extends Thread {
 					storage.setAlarm(currentValue);
 				}
 			}
+			storage.setAlarmFlag(input.getAlarmFlag());
 			previousChoice = currentChoice;
 		}
 	}

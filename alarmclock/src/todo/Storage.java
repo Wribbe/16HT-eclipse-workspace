@@ -21,6 +21,7 @@ public class Storage {
 	private int alarmtime = -1;
 	private int currentAlarmIteration = 0;
 	private int maxAlarmIterations = 20;
+	private boolean alarmChecked = false;
 	
 	/* Shared variables: */
 	private int time = -1;
@@ -40,6 +41,12 @@ public class Storage {
 		
 		/* Set current time. */
 		time = getCurrentTime();
+	}
+	
+	public void setAlarmFlag(boolean state) {
+		mutex.take();
+		alarmChecked = state;
+		mutex.give();
 	}
 	
 	public void setAlarm(int alarmtime) {
@@ -135,7 +142,7 @@ public class Storage {
 		if (time == alarmtime) {
 			setAlarmOn();
 		}
-		if (alarmOn) { 
+		if (alarmOn && alarmChecked) { 
 			output.doAlarm();
 			if (currentAlarmIteration++ >= maxAlarmIterations) {
 				setAlarmOff();
