@@ -31,6 +31,7 @@ public class Person extends Thread{
 			try {
 				ElivatorData data = monitor.elivatorStatus(current, destination, traveling);
 				view.drawLevel(data.here, data.people);
+				view.drawLift(data.here, data.load);
 				traveling = true;
 				data = monitor.elivatorStatus(current, destination, traveling);
 				view.drawLift(data.here, data.load);
