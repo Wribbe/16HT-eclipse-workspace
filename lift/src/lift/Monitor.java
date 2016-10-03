@@ -45,34 +45,46 @@ public class Monitor {
 			ElevatorData data = new ElevatorData();
 			data.here = here;
 			data.load = load;
+			notifyAll();
 			return data;
 		} else { // On a floor.
-			while(here != current) {
-				wait();
-			}
-			while(load >= maxLoad) {
+			while(here != current || load >= maxLoad) {
 				wait();
 			}
 			load++; // Entering elevator.
 			waitEntry[here]--;
+			if(load >= maxLoad || waitEntry[here] == 0) {
+				nextFloor();
+			}
 			ElevatorData data = new ElevatorData();
 			data.here = here;
 			data.load = load;
 			data.people = waitEntry[here];
+			notifyAll();
 			return data;
 		}
 	}
 	
 	public synchronized ElevatorData callLiftAt(int floor) {
-		D.print(""+floor);
 		waitEntry[floor]++;
 		ElevatorData data = new ElevatorData();
 		data.people = waitEntry[floor];
+		if (here == next) { // Lift is stopped.
+			next = floor;
+		}
 		return data;
 	}
 
 	public synchronized void setNewFloor(int newFloor) {
 		here = newFloor;
 		notifyAll();
+	}
+
+	private void nextFloor() {
+		int tempFloor = here + direction;
+		if (tempFloor > MAXFLOOORS || tempFloor < 0) {
+			direction *= -1; // Switch direction.
+		}
+		next = here+direction;
 	}
 }
