@@ -18,7 +18,7 @@ public class Simulation {
 	public static void main(String[] args) {
 		Simulation sim = new Simulation();
 //		time.start();
-		Lift lift = new Lift(monitor);
+		Lift lift = new Lift(monitor, view);
 		lift.start();
 		
 //		for(int i=0; i<numPeople; i++) {

@@ -28,13 +28,15 @@ public class Monitor {
 		view.drawLift(here, 0);
 	}
 	
-	public synchronized int nextFloor() throws InterruptedException {
+	public synchronized ElivatorData moveElivator() throws InterruptedException {
 		while(here == next || liftMoving) {
 			wait();
 		}
-		view.moveLift(here, next);
 		liftMoving = true;
-		return next;
+		ElivatorData data = new ElivatorData();
+		data.here = here;
+		data.next = next;
+		return data;
 	}
 	
 	public synchronized void callLift(int floor) {

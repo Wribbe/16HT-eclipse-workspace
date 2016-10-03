@@ -3,21 +3,19 @@ package lift;
 public class Lift extends Thread {
 	
 	private static Monitor monitor;
-	private static view;
+	private static LiftView view;
 	
 	public Lift(Monitor monitor, LiftView view) {
-		this.monitor = monitor;
-		this.veiw = view;
+		Lift.monitor = monitor;
+		Lift.view = view;
 	}
 	
 	public void run() {
 		while(true) { 
 			try {
 				// En monitor metod per trådtyp.
-				int next_floor = monitor.nextFloor();
-				view.moveLift(here, next);
-				sleep(1000);
-				monitor.arrivedAt(next_floor);
+				ElivatorData data = monitor.moveElivator();
+				view.moveLift(data.here, data.next);
 			} catch (InterruptedException e) {
 				break;
 			}
