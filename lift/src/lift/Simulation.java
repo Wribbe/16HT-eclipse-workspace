@@ -3,18 +3,27 @@ package lift;
 public class Simulation {
 	
 	private static LiftView view;
-	private static Dicebox dices;
+	private static Monitor monitor;
+	private static TimeCrystal time;
+	
+	private final static int numPeople = 25;
+	private final static int numFloors = 7;
 	
 	Simulation() {
 		view = new LiftView();
-		dices = new Dicebox();
+		monitor = new Monitor(7, view);
+		time = new TimeCrystal(monitor);
 	}
 
 	public static void main(String[] args) {
 		Simulation sim = new Simulation();
-		for(int i=0; i<20; i++) {
-			Lift lift = new Lift(i);
-			lift.start();
-		}
+//		time.start();
+		Lift lift = new Lift(monitor);
+		lift.start();
+		
+//		for(int i=0; i<numPeople; i++) {
+//			Person person = new Person(monitor, numFloors);
+//			person.start();
+//		}
 	}
 }

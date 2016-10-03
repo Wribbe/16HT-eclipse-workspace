@@ -2,21 +2,24 @@ package lift;
 
 public class Lift extends Thread {
 	
-	private int id;
-	private static Dicebox dice;
+	private static Monitor monitor;
+	private static view;
 	
-	public Lift(int id) {
-		this.id = id;
-		dice = new Dicebox();
+	public Lift(Monitor monitor, LiftView view) {
+		this.monitor = monitor;
+		this.veiw = view;
 	}
 	
 	public void run() {
-		for(int i = 0; i < 5; i++) {
-			System.out.println("Lift: "+id+" spin "+i);
+		while(true) { 
 			try {
-				Thread.sleep(dice.randomDelay(10));
+				// En monitor metod per trådtyp.
+				int next_floor = monitor.nextFloor();
+				view.moveLift(here, next);
+				sleep(1000);
+				monitor.arrivedAt(next_floor);
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				break;
 			}
 		}
 	}
