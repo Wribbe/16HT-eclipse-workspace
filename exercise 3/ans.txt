@@ -1,0 +1,30 @@
+class S extends Thread {
+    public void run () {
+        // ....
+        A.take ();
+        B.take ();
+        useAB ();
+        A.give ();
+        C.take ();
+        useBC ();
+        B.give ();
+        C.give ();
+        // ....
+    }
+}
+
+// Change to.
+class S extends Thread {
+    public void run () {
+        // ....
+        B.take ();
+        A.take ();
+        useAB ();
+        A.give ();
+        C.take ();
+        useBC ();
+        B.give ();
+        C.give ();
+        // ....
+    }
+}
