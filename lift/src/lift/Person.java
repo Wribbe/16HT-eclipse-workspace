@@ -22,18 +22,18 @@ public class Person extends Thread{
 			destination = Dicebox.randomFloor();
 		}
 		traveling = false;
-		ElivatorData data = monitor.callLiftAt(current);
+		ElevatorData data = monitor.callLiftAt(current);
 		view.drawLevel(current, data.people);
 	}
 	
 	public void run() {
 		while(true) {
 			try {
-				ElivatorData data = monitor.elivatorStatus(current, destination, traveling);
+				ElevatorData data = monitor.elevatorStatus(current, destination, traveling);
 				view.drawLevel(data.here, data.people);
 				view.drawLift(data.here, data.load);
 				traveling = true;
-				data = monitor.elivatorStatus(current, destination, traveling);
+				data = monitor.elevatorStatus(current, destination, traveling);
 				view.drawLift(data.here, data.load);
 				newDestination();
 			} catch (InterruptedException e) {

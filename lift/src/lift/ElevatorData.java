@@ -1,6 +1,6 @@
 package lift;
 
-public class ElivatorData {
+public class ElevatorData {
 	public int here = -1;
 	public int next = -1;
 	public int load = -1;

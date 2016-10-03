@@ -23,26 +23,26 @@ public class Monitor {
 		view.drawLift(here, load);
 	}
 	
-	public synchronized ElivatorData moveElivator() throws InterruptedException {
+	public synchronized ElevatorData moveElevator() throws InterruptedException {
 		while(here == next) {
 			wait();
 		}
-		ElivatorData data = new ElivatorData();
+		ElevatorData data = new ElevatorData();
 		data.here = here;
 		data.next = next;
 		return data;
 	}
 	
-	public synchronized ElivatorData elivatorStatus(int current, int destination, boolean traveling) throws InterruptedException {
+	public synchronized ElevatorData elevatorStatus(int current, int destination, boolean traveling) throws InterruptedException {
 		while(here != next) {
 			wait();
 		}
-		if (traveling) { // In elivator.
+		if (traveling) { // In elevator.
 			while(here != destination) {
 				wait();
 			}
-			load--; // Exiting elivator;
-			ElivatorData data = new ElivatorData();
+			load--; // Exiting elevator;
+			ElevatorData data = new ElevatorData();
 			data.here = here;
 			data.load = load;
 			return data;
@@ -53,9 +53,9 @@ public class Monitor {
 			while(load >= maxLoad) {
 				wait();
 			}
-			load++; // Entering elivator.
+			load++; // Entering elevator.
 			waitEntry[here]--;
-			ElivatorData data = new ElivatorData();
+			ElevatorData data = new ElevatorData();
 			data.here = here;
 			data.load = load;
 			data.people = waitEntry[here];
@@ -63,10 +63,10 @@ public class Monitor {
 		}
 	}
 	
-	public synchronized ElivatorData callLiftAt(int floor) {
+	public synchronized ElevatorData callLiftAt(int floor) {
 		D.print(""+floor);
 		waitEntry[floor]++;
-		ElivatorData data = new ElivatorData();
+		ElevatorData data = new ElevatorData();
 		data.people = waitEntry[floor];
 		return data;
 	}

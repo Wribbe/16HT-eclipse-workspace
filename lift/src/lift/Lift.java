@@ -13,7 +13,7 @@ public class Lift extends Thread {
 	public void run() {
 		while(true) { 
 			try {
-				ElivatorData data = monitor.moveElivator();
+				ElevatorData data = monitor.moveElevator();
 				view.moveLift(data.here, data.next);
 				monitor.setNewFloor(data.next);
 			} catch (InterruptedException e) {
