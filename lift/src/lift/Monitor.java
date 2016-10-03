@@ -17,7 +17,7 @@ public class Monitor {
 		waitEntry = new int[maxFloors];
 		waitExit = new int[maxFloors];
 
-		next = 1;
+		next = 0;
 		here = 0;
 		load = 0;
 		view.drawLift(here, load);
