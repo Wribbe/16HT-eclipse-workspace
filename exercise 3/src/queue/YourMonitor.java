@@ -1,12 +1,15 @@
 package queue;
 
+import java.lang.reflect.WildcardType;
+
 class YourMonitor {
 	private int nCounters;
-	// Put your attributes here...
+	private int waitingCustomers;
+	private final int maxCustomers = 100;
 
 	YourMonitor(int n) { 
 		nCounters = n;
-		// Initialize your attributes here...
+		waitingCustomers = 0;
 	}
 
 	/**
@@ -14,8 +17,13 @@ class YourMonitor {
 	 * There is never more than 100 customers waiting.
 	 */
 	synchronized int customerArrived() { 
-		// Implement this method...
-		return 0;
+		/** 
+		 * Increment it with a hard stop at maxCustomers. Return the value
+		 * before the increment.
+		 */
+		int currentWaiting = waitingCustomers;
+		waitingCustomers = (waitingCustomers + 1) % maxCustomers;
+		return currentWaiting;
 	}
 
 	/**
