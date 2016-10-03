@@ -8,46 +8,71 @@ public class Monitor {
 	private int[] waitExit;
 	private int load;
 	
-	private static final int up = 1;
-	private static final int down = -1;
-
-	private static final int open =  1;
-	private static final int moving =  0;
-	private static final int closed = -1;
-	
-	private static int maxFloors;
-	private static LiftView view;
-	
-	private boolean liftMoving = false;
+	private int direction = 1;
+	private final int maxLoad = 4;
+	public static final int MAXFLOOORS = 7;
 	
 	public Monitor(int maxFloors, LiftView view) {
-		this.maxFloors = maxFloors;
-		this.view = view;
+		
+		waitEntry = new int[maxFloors];
+		waitExit = new int[maxFloors];
+
 		next = 1;
 		here = 0;
-		view.drawLift(here, 0);
+		load = 0;
+		view.drawLift(here, load);
 	}
 	
 	public synchronized ElivatorData moveElivator() throws InterruptedException {
-		while(here == next || liftMoving) {
+		while(here == next) {
 			wait();
 		}
-		liftMoving = true;
 		ElivatorData data = new ElivatorData();
 		data.here = here;
 		data.next = next;
 		return data;
 	}
 	
-	public synchronized void callLift(int floor) {
-		next = floor;
+	public synchronized ElivatorData elivatorStatus(int current, int destination, boolean traveling) throws InterruptedException {
+		while(here != next) {
+			wait();
+		}
+		if (traveling) { // In elivator.
+			while(here != destination) {
+				wait();
+			}
+			load--; // Exiting elivator;
+			ElivatorData data = new ElivatorData();
+			data.here = here;
+			data.load = load;
+			return data;
+		} else { // On a floor.
+			while(here != current) {
+				wait();
+			}
+			while(load >= maxLoad) {
+				wait();
+			}
+			load++; // Entering elivator.
+			waitEntry[here]--;
+			ElivatorData data = new ElivatorData();
+			data.here = here;
+			data.load = load;
+			data.people = waitEntry[here];
+			return data;
+		}
 	}
 	
-	public synchronized void arrivedAt(int floor) {
-		D.print("Arrived at: "+floor);
-		view.drawLift(floor, 0);
-		here = floor;
-		liftMoving = false;
-		callLift((floor + 1)%maxFloors);
+	public synchronized ElivatorData callLiftAt(int floor) {
+		D.print(""+floor);
+		waitEntry[floor]++;
+		ElivatorData data = new ElivatorData();
+		data.people = waitEntry[floor];
+		return data;
+	}
+
+	public synchronized void setNewFloor(int newFloor) {
+		here = newFloor;
+		notifyAll();
 	}
 }

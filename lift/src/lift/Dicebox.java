@@ -2,6 +2,12 @@ package lift;
 
 public class Dicebox {
 	
+	private static final int maxFloors = 7;
+	
+	public static int randomFloor() {
+		return randomInt(maxFloors-1);
+	}
+	
 	public static float randomFloat(float max) {
 		return (float)Math.random()*(max+1);
 	}

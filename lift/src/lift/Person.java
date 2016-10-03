@@ -2,44 +2,39 @@ package lift;
 
 public class Person extends Thread{
 	
-	private int currentFloor;
-	private int nextFloor;
-	private int maxFloors;
+	private int current;
+	private int destination;
+	private boolean traveling;
 	
 	private Monitor monitor;
+	private LiftView view;
 	
-	public Person(Monitor monitor, int maxFloors) {
-		this.maxFloors = maxFloors;
-		currentFloor = randomFloor();
-		nextFloor = randomFloor();
+	public Person(Monitor monitor, LiftView view) {
 		this.monitor = monitor;
-		try {
-			Thread.sleep(Dicebox.randomDelay(45));
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+		this.view = view;
 		newDestination();
 	}
 	
-	private int randomFloor() {
-		return Dicebox.randomInt(maxFloors);
+	public void newDestination() {
+		current = Dicebox.randomFloor();
+		destination = Dicebox.randomFloor();
+		while(current == destination) {
+			destination = Dicebox.randomFloor();
+		}
+		traveling = false;
+		ElivatorData data = monitor.callLiftAt(current);
+		view.drawLevel(current, data.people);
 	}
 	
-	public void newDestination() {
-		while(nextFloor == currentFloor) {
-			nextFloor = randomFloor();
-		}
-		D.print("CurrentFloor: "+currentFloor+" Next: "+nextFloor);
-		monitor.callLift(currentFloor);
-		D.print("Called lift to "+currentFloor);
-	}
-
 	public void run() {
 		while(true) {
 			try {
-				if (monitor.atFloor() != currentFloor) {
-					wait();
-				}
+				ElivatorData data = monitor.elivatorStatus(current, destination, traveling);
+				view.drawLevel(data.here, data.people);
+				traveling = true;
+				data = monitor.elivatorStatus(current, destination, traveling);
+				view.drawLift(data.here, data.load);
+				newDestination();
 			} catch (InterruptedException e) {
 				break;
 			}
