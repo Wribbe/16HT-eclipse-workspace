@@ -13,7 +13,8 @@ public class Simulation {
 	public static void main(String[] args) {
 		Simulation sim = new Simulation();
 		for(int i=0; i<20; i++) {
-			System.out.println(dices.randomDelay(10));
+			Lift lift = new Lift(i);
+			lift.start();
 		}
 	}
 }
