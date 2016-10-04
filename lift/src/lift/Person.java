@@ -30,11 +30,11 @@ public class Person extends Thread{
 	public void run() {
 		while(true) {
 			try {
-				ElevatorData data = monitor.elevatorStatus(current, destination, traveling);
+				ElevatorData data = monitor.elevatorEvaluation(current, destination, traveling);
 				view.drawLevel(data.here, data.people);
 				view.drawLift(data.here, data.load);
 				traveling = true;
-				data = monitor.elevatorStatus(current, destination, traveling);
+				data = monitor.elevatorEvaluation(current, destination, traveling);
 				view.drawLift(data.here, data.load);
 				newDestination();
 			} catch (InterruptedException e) {

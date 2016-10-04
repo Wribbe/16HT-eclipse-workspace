@@ -24,7 +24,7 @@ public class Monitor {
 	}
 	
 	public synchronized ElevatorData moveElevator() throws InterruptedException {
-		while(here == next) {
+		while(waitExit[here] > 0) {
 			wait();
 		}
 		ElevatorData data = new ElevatorData();
@@ -33,51 +33,43 @@ public class Monitor {
 		return data;
 	}
 	
-	public synchronized ElevatorData elevatorStatus(int current, int destination, boolean traveling) throws InterruptedException {
-		while(here != next) {
-			D.print("Lift is moving");
+	public synchronized ElevatorData getNextFloor() throws InterruptedException {
+		while(!elevatorShouldContinue()) {
 			wait();
 		}
-		if (traveling) { // In elevator.
-			D.print("Person is traveling");
-			while(here != destination) {
-				notifyAll();
-				wait();
-			}
-			load--; // Exiting elevator;
-			ElevatorData data = new ElevatorData();
-			data.here = here;
-			data.load = load;
-			shouldElevatorContinue();
-			notifyAll();
-			return data;
-		} else { // On a floor.
-			D.print("Person is not traveling");
-			while(here != current || load >= maxLoad) {
-				D.print("Lift is at: "+here+" not at floor: "+current);
-				notifyAll();
-				wait();
-			}
-			D.print("Entering elevator.");
-			load++; // Entering elevator.
-			waitEntry[here]--;
-			ElevatorData data = new ElevatorData();
-			data.here = here;
-			data.load = load;
-			data.people = waitEntry[here];
-			shouldElevatorContinue();
-			notifyAll();
-			return data;
+		ElevatorData data = new ElevatorData();
+		data.here = here;
+		data.next = nextFloor();
+		return data;
+	}
+	
+	public synchronized ElevatorData elevatorEvaluation(int current, int destination, boolean traveling) throws InterruptedException {
+		while(here != next) { // Lift moving.
+			D.print("Lift is moving.");
+			wait();
 		}
+		ElevatorData data = new ElevatorData();
+		if (!traveling && current == here && load <= maxLoad) { // Lift here and has room.
+			load++;
+			waitEntry[here]--;
+			waitExit[destination]++;
+		} else if (traveling && here == destination) {
+			load--;
+			waitExit[destination]--;
+		} else { // Lift not at correct position.
+			wait();
+		}
+		data.here = here;
+		data.load = load;
+		data.people = waitEntry[here];
+		return data;
 	}
 	
 	public synchronized ElevatorData callLiftAt(int floor) {
 		waitEntry[floor]++;
 		ElevatorData data = new ElevatorData();
 		data.people = waitEntry[floor];
-		if (here == next) { // Lift is stopped.
-			next = floor;
-		}
+		notifyAll();
 		return data;
 	}
 	
@@ -86,17 +78,23 @@ public class Monitor {
 		notifyAll();
 	}
 
-	private void nextFloor() {
+	private int nextFloor() {
 		int tempFloor = here + direction;
 		if (tempFloor >= MAXFLOOORS || tempFloor < 0) {
 			direction *= -1; // Switch direction.
 		}
-		next = here+direction;
+		return here+direction;
 	}
 	
-	private void shouldElevatorContinue() {
-		if(load >= maxLoad || waitEntry[here] == 0) {
-			nextFloor();
+	private boolean elevatorShouldContinue() {
+		boolean peopleWaiting = waitEntry[here] > 0;
+		boolean peopleExiting = waitExit[here] > 0;
+		boolean roomLeft = load <= maxLoad;
+		if (!peopleWaiting && !peopleExiting) {
+			return true;
+		} else if (peopleWaiting && !roomLeft) {
+			return true;
 		}
+		return false;
 	}
 }
