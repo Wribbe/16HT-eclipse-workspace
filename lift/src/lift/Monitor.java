@@ -35,31 +35,37 @@ public class Monitor {
 	
 	public synchronized ElevatorData elevatorStatus(int current, int destination, boolean traveling) throws InterruptedException {
 		while(here != next) {
+			D.print("Lift is moving");
 			wait();
 		}
 		if (traveling) { // In elevator.
+			D.print("Person is traveling");
 			while(here != destination) {
+				notifyAll();
 				wait();
 			}
 			load--; // Exiting elevator;
 			ElevatorData data = new ElevatorData();
 			data.here = here;
 			data.load = load;
+			shouldElevatorContinue();
 			notifyAll();
 			return data;
 		} else { // On a floor.
+			D.print("Person is not traveling");
 			while(here != current || load >= maxLoad) {
+				D.print("Lift is at: "+here+" not at floor: "+current);
+				notifyAll();
 				wait();
 			}
+			D.print("Entering elevator.");
 			load++; // Entering elevator.
 			waitEntry[here]--;
-			if(load >= maxLoad || waitEntry[here] == 0) {
-				nextFloor();
-			}
 			ElevatorData data = new ElevatorData();
 			data.here = here;
 			data.load = load;
 			data.people = waitEntry[here];
+			shouldElevatorContinue();
 			notifyAll();
 			return data;
 		}
@@ -74,7 +80,7 @@ public class Monitor {
 		}
 		return data;
 	}
-
+	
 	public synchronized void setNewFloor(int newFloor) {
 		here = newFloor;
 		notifyAll();
@@ -82,9 +88,15 @@ public class Monitor {
 
 	private void nextFloor() {
 		int tempFloor = here + direction;
-		if (tempFloor > MAXFLOOORS || tempFloor < 0) {
+		if (tempFloor >= MAXFLOOORS || tempFloor < 0) {
 			direction *= -1; // Switch direction.
 		}
 		next = here+direction;
+	}
+	
+	private void shouldElevatorContinue() {
+		if(load >= maxLoad || waitEntry[here] == 0) {
+			nextFloor();
+		}
 	}
 }

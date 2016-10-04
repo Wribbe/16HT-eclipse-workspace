@@ -23,6 +23,7 @@ public class Person extends Thread{
 		}
 		traveling = false;
 		ElevatorData data = monitor.callLiftAt(current);
+		D.print("Want to go from: "+current+" to: "+destination);
 		view.drawLevel(current, data.people);
 	}
 	

@@ -5,7 +5,7 @@ public class Simulation {
 	private static LiftView view;
 	private static Monitor monitor;
 	
-	private final static int numPeople = 5;
+	private final static int numPeople = 1;
 	
 	Simulation() {
 		view = new LiftView();
