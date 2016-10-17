@@ -59,6 +59,9 @@ public abstract class WashingProgram extends RTThread {
 		myWaterController = waterController;
 		mySpinController  = spinController;
 	}
+	
+	// Temporary empty constructor.
+	protected WashingProgram(){};
 
 	// ---------------------------------------------------- OVERRIDDEN METHODS
 

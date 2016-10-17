@@ -37,6 +37,9 @@ class WashingProgram1 extends WashingProgram {
 			SpinController spinController) {
 		super(mach, speed, tempController, waterController, spinController);
 	}
+	
+	// Temporary empty constructor.
+	public WashingProgram1(){}
 
 	// ---------------------------------------------------------- PUBLIC METHODS
 
