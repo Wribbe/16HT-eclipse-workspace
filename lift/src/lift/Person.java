@@ -16,6 +16,7 @@ public class Person extends Thread{
 	}
 	
 	public void newDestination() {
+
 		traveling = false;
 
 		current = Dicebox.randomFloor();
@@ -23,24 +24,38 @@ public class Person extends Thread{
 		while(current == destination) {
 			destination = Dicebox.randomFloor();
 		}
-
 		ElevatorData data = monitor.callLiftAt(current);
 		view.drawLevel(current, data.people);
+
 	}
 	
 	public void run() {
 		while(true) {
 			try {
+
 				// Waiting to enter lift.
-				monitor.elevatorEvaluation(current, destination, traveling);
+				ElevatorData data = monitor.elevatorEvaluation(current, destination, traveling);
 				// Entered lift.
 				traveling = true;
+				// Draw new state.
+				view.drawLevel(data.here, data.people);
+				view.drawLift(data.here, data.load);
+				sleep(500); // All can't enter at once.
+				// Release animation lock.
+				monitor.animationDec();
+
 				// Waiting for correct floor.
-				monitor.elevatorEvaluation(current, destination, traveling);
+				data = monitor.elevatorEvaluation(current, destination, traveling);
+				view.drawLift(data.here, data.load);
+				// Release animaiton lock.
+				monitor.animationDec();
+
 				// Sleep for max 2 seconds before re-appearing.
 				sleep(Dicebox.randomDelay(2));
 				newDestination(); 	// Pick new destination.
+
 				sleep(1000); 		// Wait a second before possible to enter elevator.
+
 			} catch (InterruptedException e) {
 				break;
 			}

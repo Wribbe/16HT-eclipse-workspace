@@ -11,7 +11,7 @@ public class Monitor {
 	private final int maxLoad = 4;
 	public static final int MAXFLOOORS = 7;
 	
-	private LiftView view;
+	private int animationQueue = 0;
 
 	public Monitor(int maxFloors, LiftView view) {
 		
@@ -22,7 +22,6 @@ public class Monitor {
 		here = 0;
 		load = 0;
 		view.drawLift(here, load);
-		this.view = view;
 	}
 	
 	public synchronized ElevatorData getNextFloor() throws InterruptedException {
@@ -39,41 +38,61 @@ public class Monitor {
 		return data;
 	}
 	
-	public synchronized void elevatorEvaluation(int current, int destination, boolean traveling) throws InterruptedException {
+	
+	private void animationAdd() {
+		animationQueue++;
+	}
+
+	public synchronized void animationDec() {
+		animationQueue--;
+		notifyAll();
+	}
+	
+	public synchronized boolean animationsInQueue() {
+		return animationQueue > 0;
+	}
+	
+	public synchronized ElevatorData elevatorEvaluation(int current, int destination, boolean traveling) throws InterruptedException {
 		
 		if (!traveling) { // Waiting for elevator.
 
-			while (!roomLeft() || !currentLevelIs(current) || liftMoving()) {
+			while (!roomLeft() || !currentLevelIs(current) || liftMoving() || animationsInQueue()) {
 				wait();
 			}
 			
 			// CRITICAL: Entering elevator, modifying shared data.
 
+			animationAdd();
+
 			load++;
 			waitEntry[current]--;
 			waitExit[destination]++;
+			
+			ElevatorData data = new ElevatorData();
+			data.here = here;
+			data.load = load;
+			data.people = waitEntry[current];
 
-			view.drawLevel(here, waitEntry[current]);
-			view.drawLift(here, load);
-			notifyAll();
-
-			return;
+			return data;
 
 		} else { // Waiting to exit elevator.
 
-			while (!currentLevelIs(destination) || liftMoving()) {
+			while (!currentLevelIs(destination) || liftMoving() || animationsInQueue()) {
 				wait();
 			}
+
+			animationAdd();
 
 			// CRITICAL: Exiting elevator, modifying shared data.
 
 			load--;
 			waitExit[destination]--;
 
-			view.drawLift(here, load);
-			notifyAll();
+			ElevatorData data = new ElevatorData();
+			data.here = here;
+			data.load = load;
 
-			return;
+			return data;
 		}
 	}
 	
@@ -123,8 +142,8 @@ public class Monitor {
 	
 	private boolean elevatorShouldContinue() {
 
-		if (peopleExiting()) {
-			return false ;
+		if (peopleExiting() || animationsInQueue()) {
+			return false;
 		}
 
 		if (!peopleWaiting() && !peopleExiting()) {
