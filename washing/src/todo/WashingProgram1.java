@@ -38,9 +38,6 @@ class WashingProgram1 extends WashingProgram {
 		super(mach, speed, tempController, waterController, spinController);
 	}
 	
-	// Temporary empty constructor.
-	public WashingProgram1(){}
-
 	// ---------------------------------------------------------- PUBLIC METHODS
 
 	/**
@@ -48,11 +45,12 @@ class WashingProgram1 extends WashingProgram {
 	 * when the start() method is called.
 	 */
 	protected void wash() throws InterruptedException {
-
-		// Switch of temp regulation
+		
+		System.out.println("Wash() inside washingprogram1");
+		
 		myTempController.putEvent(new TemperatureEvent(this,
-				TemperatureEvent.TEMP_IDLE,
-				0.0));
+				TemperatureEvent.TEMP_SET,
+				40.0));
 
 		// Switch off spin
 		mySpinController.putEvent(new SpinEvent(this, SpinEvent.SPIN_OFF));

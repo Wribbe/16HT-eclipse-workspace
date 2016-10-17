@@ -4,12 +4,28 @@ import done.*;
 
 public class WashingController implements ButtonListener {	
 	
+	// ------------------------------------------------------------- Private variables.
 	private WashingProgram currentProgram = null;
-	
 	private final int STOP = 0;
+	private AbstractWashingMachine machine;
+	private double speed;
+
+	// ------------------------------------------------------------- Controllers.
+	private TemperatureController temp;
+	private SpinController spin;
+	private WaterController water;
 	
     public WashingController(AbstractWashingMachine theMachine, double theSpeed) {
-		// TODO: implement this constructor
+    	temp = new TemperatureController(theMachine, theSpeed);
+    	spin = new SpinController(theMachine, theSpeed);
+    	water = new WaterController(theMachine, theSpeed);
+    	machine = theMachine;
+    	speed = 1000;
+    	
+    	// Start the controller threads.
+    	temp.start();
+    	spin.start();
+    	water.start();
     }
     
     private boolean programIsRunning() {
@@ -19,28 +35,28 @@ public class WashingController implements ButtonListener {
     private boolean emergencyStopPressed(int button) {
     	return button == STOP;
     }
-
+    
     public void processButton(int button) {
-
-		if (programIsRunning()) {
-			if (emergencyStopPressed(button)) {
-				System.out.println("Stop button pressed during program.");
-				currentProgram = null;
-			} else {
-				// Ignore press.
-			}
-		}
-		startProgram(button);
+    	
+    	if (programIsRunning() && emergencyStopPressed(button)) {
+    		System.out.println("Abort!");
+    	} else if (emergencyStopPressed(button) || (programIsRunning() && !emergencyStopPressed(button))) {
+    		// * Ignore emergency stop if not running.
+    		// * Ignore program buttons when program is running. 
+    	} else { // Set prorgam and start it.
+			setProgram(button);
+			currentProgram.start();
+    	}
     }
     
-    private void startProgram(int button) {
+    private void setProgram(int button) {
     	WashingProgram program = null; 
     	switch(button) {
-			case 1: program = new WashingProgram1();
+			case 1: program = new WashingProgram1(machine, speed, temp, water, spin);
 			break;
-			case 2: program = new WashingProgram2();
+			case 2: program = new WashingProgram2(machine, speed, temp, water, spin);
 			break;
-			case 3: program = new WashingProgram3();
+			case 3: program = new WashingProgram3(machine, speed, temp, water, spin);
 			break;
 			default: // Ingore;
     	}
