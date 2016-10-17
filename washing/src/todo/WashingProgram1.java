@@ -62,14 +62,8 @@ class WashingProgram1 extends WashingProgram {
 				TemperatureEvent.TEMP_SET,
 				60.0));
 		mailbox.doFetch(); // Wait for Ack
-//
-//		// Stop temperature. 
-//		myWaterController.putEvent(new WaterEvent(this,
-//				WaterEvent.WATER_IDLE,
-//				0.0));
-//
-//		// Switch off spin
-//		mySpinController.putEvent(new SpinEvent(this, SpinEvent.SPIN_OFF));
+
+		mySpinController.putEvent(new SpinEvent(this, SpinEvent.SPIN_OFF));
 //
 //		// Drain
 //		myWaterController.putEvent(new WaterEvent(this,
