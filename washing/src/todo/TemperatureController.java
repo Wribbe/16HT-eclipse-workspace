@@ -6,15 +6,20 @@ import done.AbstractWashingMachine;
 
 
 public class TemperatureController extends PeriodicThread {
-	// TODO: add suitable attributes
+	
+	private AbstractWashingMachine machine;
+	private double speed; 
 
 	public TemperatureController(AbstractWashingMachine mach, double speed) {
 		super((long) (1000/speed)); // TODO: replace with suitable period
-		System.out.println("TEMPRATURE CONTROLLER CONSTRUCTOR!");
+		machine = mach;
+		this.speed = speed;
 	}
 
 	public void perform() {
-		System.out.println("TEMPRATURE CONTROLLER PREFORM!");
-		// TODO: implement this method
+		TemperatureEvent event = (TemperatureEvent) this.mailbox.tryFetch();
+		if (event != null) {
+			machine.setHeating(true);
+		}
 	}
 }

@@ -46,27 +46,43 @@ class WashingProgram1 extends WashingProgram {
 	 */
 	protected void wash() throws InterruptedException {
 		
-		System.out.println("Wash() inside washingprogram1");
+		// Lock.
+		myMachine.setLock(true);
 		
+		// 1/2 machine = 10L = 0.5.
+		
+		// Fill with water. 
+		myWaterController.putEvent(new WaterEvent(this,
+				WaterEvent.WATER_FILL,
+				0.5));
+		mailbox.doFetch(); // Wait for Ack
+		
+		// Set temperature.
 		myTempController.putEvent(new TemperatureEvent(this,
 				TemperatureEvent.TEMP_SET,
-				40.0));
-
-		// Switch off spin
-		mySpinController.putEvent(new SpinEvent(this, SpinEvent.SPIN_OFF));
-
-		// Drain
-		myWaterController.putEvent(new WaterEvent(this,
-				WaterEvent.WATER_DRAIN,
-				0.0));
+				60.0));
 		mailbox.doFetch(); // Wait for Ack
-
-		// Set water regulation to idle => drain pump stops
-		myWaterController.putEvent(new WaterEvent(this,
-				WaterEvent.WATER_IDLE,
-				0.0));
-
-		// Unlock
-		myMachine.setLock(false);
+//
+//		// Stop temperature. 
+//		myWaterController.putEvent(new WaterEvent(this,
+//				WaterEvent.WATER_IDLE,
+//				0.0));
+//
+//		// Switch off spin
+//		mySpinController.putEvent(new SpinEvent(this, SpinEvent.SPIN_OFF));
+//
+//		// Drain
+//		myWaterController.putEvent(new WaterEvent(this,
+//				WaterEvent.WATER_DRAIN,
+//				0.0));
+//		mailbox.doFetch(); // Wait for Ack
+//
+//		// Set water regulation to idle => drain pump stops
+//		myWaterController.putEvent(new WaterEvent(this,
+//				WaterEvent.WATER_IDLE,
+//				0.0));
+//
+//		// Unlock
+//		myMachine.setLock(false);
 	}
 }

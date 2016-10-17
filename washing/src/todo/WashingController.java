@@ -16,11 +16,11 @@ public class WashingController implements ButtonListener {
 	private WaterController water;
 	
     public WashingController(AbstractWashingMachine theMachine, double theSpeed) {
-    	temp = new TemperatureController(theMachine, theSpeed);
-    	spin = new SpinController(theMachine, theSpeed);
-    	water = new WaterController(theMachine, theSpeed);
+    	speed = theSpeed;
+    	temp = new TemperatureController(theMachine, speed);
+    	spin = new SpinController(theMachine, speed);
+    	water = new WaterController(theMachine, speed);
     	machine = theMachine;
-    	speed = 1000;
     	
     	// Start the controller threads.
     	temp.start();
@@ -40,6 +40,7 @@ public class WashingController implements ButtonListener {
     	
     	if (programIsRunning() && emergencyStopPressed(button)) {
     		System.out.println("Abort!");
+    		currentProgram.interrupt();
     	} else if (emergencyStopPressed(button) || (programIsRunning() && !emergencyStopPressed(button))) {
     		// * Ignore emergency stop if not running.
     		// * Ignore program buttons when program is running. 
