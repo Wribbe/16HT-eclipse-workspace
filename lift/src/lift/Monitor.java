@@ -3,8 +3,7 @@ package lift;
 public class Monitor {
 	
 	private int here;
-	private int next;
-	private int[] waitEntry;
+	private int next; private int[] waitEntry;
 	private int[] waitExit;
 	private int load;
 	
@@ -13,6 +12,9 @@ public class Monitor {
 	public static final int MAXFLOOORS = 7;
 	
 	private boolean animationPlaying = false;
+	private int animationQueue = 0;
+	
+	private LiftView view;
 
 	public Monitor(int maxFloors, LiftView view) {
 		
@@ -23,30 +25,48 @@ public class Monitor {
 		here = 0;
 		load = 0;
 		view.drawLift(here, load);
+		this.view = view;
 	}
 	
 	public synchronized ElevatorData getNextFloor() throws InterruptedException {
 
-		D.print("Inside getNextFloor()");
-		while(!elevatorShouldContinue()) {
+		while(!elevatorShouldContinue() || animationsInQueue()) {
 			wait();
 		}
 		
-		D.print("Inside getNextFloor(), past wait()");
+		//D.print("Inside getNextFloor(), past wait()");
 		ElevatorData data = new ElevatorData();
-		data.here = here;
+		data.here = currentLevel();
 		data.next = nextFloor();
 		next = data.next;
 
 		return data;
 	}
 	
+	public synchronized void animationQueueAdd() {
+		animationQueue++;
+		D.print("Incrementing queue = "+animationQueue);
+	}
+
+	public synchronized void animationQueueDec() {
+		animationQueue--;
+		D.print("Decrementing queue = "+animationQueue);
+	}
+	
+	public synchronized boolean animationsInQueue() {
+		return animationQueue > 0;
+	}
+	
 	public synchronized void animationStart() throws InterruptedException {
-		while (animationRunning()) {
+		//D.print("In animation start().");
+		while (animationsInQueue()) {
+			//D.print("Waiting in animation start().");
 			wait();
 		}
+		animationQueueAdd();
 		this.animationPlaying = true;	
-		notifyAll();
+		//D.print("Setting and notifying in animation start().");
+//		notifyAll();
 	}
 	
 	public synchronized boolean animationRunning() {
@@ -54,7 +74,9 @@ public class Monitor {
 	}
 
 	public synchronized void animationStop() {
+		//D.print("In animationStop().");
 		this.animationPlaying = false;	
+		animationQueueDec();
 		notifyAll();
 	}
 	
@@ -62,20 +84,26 @@ public class Monitor {
 		
 		if (!traveling) { // Waiting for elevator.
 
-			while (liftMoving() || animationRunning() || !roomLeft()) {
+//			while (animationRunning() || animationsInQueue() || !roomLeft() || !currentLevelIs(current)) {
+			while (!roomLeft() || !currentLevelIs(current) || liftMoving()) {
 				wait();
 			}
 			
 			// CRITICAL: Entering elevator, change data.
 
 			load++;
-			waitEntry[here]--;
+			waitEntry[current]--;
 			waitExit[destination]++;
 
 			ElevatorData data = new ElevatorData();
-			data.here = here;
+
+			data.here = current;
 			data.load = load;
-			data.people = waitEntry[here];
+			data.people = waitEntry[current];
+			
+//			notifyAll();
+			view.drawLevel(here, waitEntry[current]);
+			view.drawLift(here, load);
 			
 			notifyAll();
 
@@ -83,7 +111,12 @@ public class Monitor {
 
 		} else { // Waiting to exit elevator.
 
-			while (liftMoving() || !atDestination(here, destination) || animationRunning()) {
+//			while (!currentLevelIs(destination) || animationRunning() || animationsInQueue()) {
+			while (!currentLevelIs(destination) || liftMoving()) {
+				//D.print("Waiting for exit @: "+destination);
+				if (currentLevelIs(destination)) {
+					//D.print("animation: "+animationRunning());
+				}
 				wait();
 			}
 
@@ -92,11 +125,14 @@ public class Monitor {
 			ElevatorData data = new ElevatorData();
 
 			load--;
-			data.here = here;
-			data.load = load;
-			data.people = waitEntry[here];
-
 			waitExit[destination]--;
+
+			data.here = destination;
+			data.load = load;
+
+			view.drawLift(data.here, data.load);
+			
+			notifyAll();
 
 			return data;
 		}
@@ -114,44 +150,57 @@ public class Monitor {
 		notifyAll();
 	}
 
-	private int nextFloor() {
-		int tempFloor = here + direction;
+	private synchronized int nextFloor() {
+		int tempFloor = currentLevel() + direction;
 		if (tempFloor >= MAXFLOOORS || tempFloor < 0) {
 			direction *= -1; // Switch direction.
 		}
-		return here+direction;
+		return currentLevel()+direction;
 	}
 	
-	private synchronized boolean peopleWaiting(int here) {
-		return waitEntry[here] > 0;
+	private synchronized boolean peopleWaiting() {
+		return waitEntry[currentLevel()] > 0;
 	}
 
-	private synchronized boolean peopleExiting(int here) {
-		return waitExit[here] > 0;
+	private synchronized boolean peopleExiting() {
+		return waitExit[currentLevel()] > 0;
 	}
 	
 	private synchronized boolean roomLeft() {
-		return load < maxLoad;
+		return getLoad() < maxLoad;
+	}
+	
+	private synchronized int getLoad() {
+		return load;
 	}
 	
 	private synchronized boolean liftMoving() {
-		return here != next;
+		return currentLevel() != next;
 	}
 	
-	private synchronized boolean atDestination(int here, int destination) {
-		return here == destination;
+	private synchronized boolean currentLevelIs(int destination) {
+		return currentLevel() == destination;
 	}
 	
-	private boolean elevatorShouldContinue() {
-		if (animationRunning()) {
-			return false;
+	private synchronized int currentLevel() {
+		return here;
+	}
+	
+	private synchronized boolean elevatorShouldContinue() {
+
+		if (peopleExiting()) {
+			return false ;
 		}
-		if (!peopleWaiting(here) && !peopleExiting(here)) {
+
+		if (!peopleWaiting() && !peopleExiting()) {
+			D.print("No one wants to exit or enter on: "+currentLevel());
 			return true;
 		}
-		if (peopleWaiting(here) && !roomLeft()) {
+		if (peopleWaiting() && !roomLeft()) {
+			D.print("No room left at: "+currentLevel());
 			return true;
 		}
+		D.print("Default false!");
 		return false;
 	}
 }
