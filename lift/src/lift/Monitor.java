@@ -21,7 +21,6 @@ public class Monitor {
 		next = 0;
 		here = 0;
 		load = 0;
-		view.drawLift(here, load);
 	}
 	
 	public synchronized ElevatorData getNextFloor() throws InterruptedException {
@@ -72,7 +71,7 @@ public class Monitor {
 			data.here = here;
 			data.load = load;
 			data.people = waitEntry[current];
-
+			
 			return data;
 
 		} else { // Waiting to exit elevator.
@@ -81,9 +80,9 @@ public class Monitor {
 				wait();
 			}
 
-			animationAdd();
-
 			// CRITICAL: Exiting elevator, modifying shared data.
+
+			animationAdd();
 
 			load--;
 			waitExit[destination]--;
@@ -100,6 +99,7 @@ public class Monitor {
 		waitEntry[floor]++;
 		ElevatorData data = new ElevatorData();
 		data.people = waitEntry[floor];
+		data.here = floor;
 		return data;
 	}
 	
@@ -141,17 +141,9 @@ public class Monitor {
 	}
 	
 	private boolean elevatorShouldContinue() {
-
-		if (peopleExiting() || animationsInQueue()) {
+		if (animationsInQueue() || peopleExiting() || (peopleWaiting() && roomLeft())) {
 			return false;
 		}
-
-		if (!peopleWaiting() && !peopleExiting()) {
-			return true;
-		}
-		if (peopleWaiting() && !roomLeft()) {
-			return true;
-		}
-		return false;
+		return true;
 	}
 }

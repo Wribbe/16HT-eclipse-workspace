@@ -12,10 +12,9 @@ public class Person extends Thread{
 	public Person(Monitor monitor, LiftView view) {
 		this.monitor = monitor;
 		this.view = view;
-		newDestination();
 	}
 	
-	public void newDestination() {
+	public ElevatorData newDestination() {
 
 		traveling = false;
 
@@ -24,8 +23,7 @@ public class Person extends Thread{
 		while(current == destination) {
 			destination = Dicebox.randomFloor();
 		}
-		ElevatorData data = monitor.callLiftAt(current);
-		view.drawLevel(current, data.people);
+		return monitor.callLiftAt(current);
 
 	}
 	
@@ -33,28 +31,35 @@ public class Person extends Thread{
 		while(true) {
 			try {
 
+				// Pick destination and draw level.
+				ElevatorData data = newDestination(); 	
+				view.drawLevel(data.here, data.people);
+
+				// Wait a second before it is possible to enter elevator.
+				sleep(1000);
+
 				// Waiting to enter lift.
-				ElevatorData data = monitor.elevatorEvaluation(current, destination, traveling);
+				data = monitor.elevatorEvaluation(current, destination, traveling);
 				// Entered lift.
 				traveling = true;
-				// Draw new state.
+				// Draw new floor state.
 				view.drawLevel(data.here, data.people);
+				// Draw new lift state.
 				view.drawLift(data.here, data.load);
-				sleep(500); // All can't enter at once.
+				// Wait slightly so that everyone can't enter at once.
+				sleep(500); 
 				// Release animation lock.
 				monitor.animationDec();
 
 				// Waiting for correct floor.
 				data = monitor.elevatorEvaluation(current, destination, traveling);
+				// Got out of the lift, draw new lift state.
 				view.drawLift(data.here, data.load);
 				// Release animaiton lock.
 				monitor.animationDec();
 
-				// Sleep for max 2 seconds before re-appearing.
+				// Wait for max 2 seconds before re-appearing.
 				sleep(Dicebox.randomDelay(2));
-				newDestination(); 	// Pick new destination.
-
-				sleep(1000); 		// Wait a second before possible to enter elevator.
 
 			} catch (InterruptedException e) {
 				break;
