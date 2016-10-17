@@ -1,12 +1,23 @@
 package queue;
 
+import java.lang.reflect.WildcardType;
+import java.util.LinkedList;
+import java.util.List;
+
 class YourMonitor {
+
 	private int nCounters;
-	// Put your attributes here...
+	private int waitingCustomers;
+	private int lastCustomerServed;
+	private List<Integer> avaibleClerks;
+
+	private final int maxCustomers = 100;
 
 	YourMonitor(int n) { 
 		nCounters = n;
-		// Initialize your attributes here...
+		waitingCustomers = 0;
+		lastCustomerServed = 0;
+		avaibleClerks = new LinkedList<Integer>();;
 	}
 
 	/**
@@ -14,15 +25,24 @@ class YourMonitor {
 	 * There is never more than 100 customers waiting.
 	 */
 	synchronized int customerArrived() { 
-		// Implement this method...
-		return 0;
+		/** 
+		 * Increment it with a hard stop at maxCustomers. Return the value
+		 * before the increment.
+		 */
+		int currentWaiting = waitingCustomers;
+		waitingCustomers = (waitingCustomers + 1) % maxCustomers;
+		notifyAll();
+		return currentWaiting;
 	}
 
 	/**
 	 * Register the clerk at counter id as free. Send a customer if any. 
 	 */
 	synchronized void clerkFree(int id) { 
-		// Implement this method...
+		if (avaibleClerks.indexOf(id) < 0) { // Is not in list.
+			avaibleClerks.add(id);
+			notifyAll();
+		}
 	}
 
 	/**
@@ -31,7 +51,15 @@ class YourMonitor {
 	 * number of the engaged clerk.
 	 */
 	synchronized DispData getDisplayData() throws InterruptedException { 
-		// Implement this method...
-		return null;
+		while((waitingCustomers == lastCustomerServed) || avaibleClerks.isEmpty()) {
+			wait();
+		}
+		int currentCounter = avaibleClerks.remove(0);
+		int currentCustomer = lastCustomerServed;
+		lastCustomerServed = (lastCustomerServed+1) % maxCustomers;
+		DispData data = new DispData();
+		data.counter = currentCounter;
+		data.ticket = currentCustomer;
+		return data;
 	}
 }
