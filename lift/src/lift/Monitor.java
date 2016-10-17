@@ -100,6 +100,7 @@ public class Monitor {
 		ElevatorData data = new ElevatorData();
 		data.people = waitEntry[floor];
 		data.here = floor;
+		notifyAll();
 		return data;
 	}
 	
@@ -116,8 +117,12 @@ public class Monitor {
 		return currentLevel()+direction;
 	}
 	
+	private int peopleWaitingAt(int floor) {
+		return waitEntry[floor];
+	}
+
 	private boolean peopleWaiting() {
-		return waitEntry[currentLevel()] > 0;
+		return peopleWaitingAt(currentLevel()) > 0;
 	}
 
 	private boolean peopleExiting() {
@@ -140,8 +145,25 @@ public class Monitor {
 		return here;
 	}
 	
+	private boolean noPeopleWaitingOrTraveling() {
+
+		// Check elevator for passengers.
+		if (load > 0) {
+			return false;
+		}
+
+		// Check all floor for people waiting.
+		for (int i=0; i<MAXFLOOORS; i++) {
+			if(peopleWaitingAt(i) > 0) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+	
 	private boolean elevatorShouldContinue() {
-		if (animationsInQueue() || peopleExiting() || (peopleWaiting() && roomLeft())) {
+		if (animationsInQueue() || peopleExiting() || (peopleWaiting() && roomLeft()) || noPeopleWaitingOrTraveling()) {
 			return false;
 		}
 		return true;
