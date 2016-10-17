@@ -39,12 +39,28 @@ class WashingProgram1 extends WashingProgram {
 	}
 	
 	// ---------------------------------------------------------- PUBLIC METHODS
+	
+	private long waitTime(int minutes) {
+		return (long)(1000*60*minutes/mySpeed);
+	}
 
 	/**
 	 * This method contains the actual code for the washing program. Executed
 	 * when the start() method is called.
 	 */
 	protected void wash() throws InterruptedException {
+
+		// Wash cycle.
+//		int minutes = 30;
+		int washMinutes = 10;
+
+		// Rince cycle.
+		int rinceMinutes = 2;
+		int rinceMax = 5;
+		int currentRince = 0;
+		
+		// Centrifuge cycle.
+		int centrifugeMinutes = 5;
 		
 		// Lock.
 		myMachine.setLock(true);
@@ -60,23 +76,48 @@ class WashingProgram1 extends WashingProgram {
 		// Set temperature.
 		myTempController.putEvent(new TemperatureEvent(this,
 				TemperatureEvent.TEMP_SET,
-				60.0));
+				30.0));
+		mailbox.doFetch(); // Wait for Ack
+		
+
+		mySpinController.putEvent(new SpinEvent(this, SpinEvent.SPIN_SLOW));
+		sleep(waitTime(washMinutes));
+		mySpinController.putEvent(new SpinEvent(this, SpinEvent.SPIN_OFF));
+		mailbox.doFetch(); // Wait for Ack
+		
+		// Turn of temperature.
+		myTempController.putEvent(new TemperatureEvent(this,
+				TemperatureEvent.TEMP_IDLE,
+				00.0));
+		mailbox.doFetch(); // Wait for Ack
+		
+		// Drain
+		myWaterController.putEvent(new WaterEvent(this,
+				WaterEvent.WATER_DRAIN,
+				0.0));
+		mailbox.doFetch(); // Wait for Ack
+		
+		while(currentRince < rinceMax) {
+			// Fill up.
+			myWaterController.putEvent(new WaterEvent(this,
+					WaterEvent.WATER_FILL,
+					0.5));
+			mailbox.doFetch(); // Wait for Ack
+			sleep(waitTime(rinceMinutes));
+			currentRince++;
+			// Drain.
+			myWaterController.putEvent(new WaterEvent(this,
+					WaterEvent.WATER_DRAIN,
+					0.0));
+			mailbox.doFetch(); // Wait for Ack
+		}
+		
+		mySpinController.putEvent(new SpinEvent(this, SpinEvent.SPIN_FAST));
+		sleep(waitTime(centrifugeMinutes));
+		mySpinController.putEvent(new SpinEvent(this, SpinEvent.SPIN_OFF));
 		mailbox.doFetch(); // Wait for Ack
 
-		mySpinController.putEvent(new SpinEvent(this, SpinEvent.SPIN_OFF));
-//
-//		// Drain
-//		myWaterController.putEvent(new WaterEvent(this,
-//				WaterEvent.WATER_DRAIN,
-//				0.0));
-//		mailbox.doFetch(); // Wait for Ack
-//
-//		// Set water regulation to idle => drain pump stops
-//		myWaterController.putEvent(new WaterEvent(this,
-//				WaterEvent.WATER_IDLE,
-//				0.0));
-//
-//		// Unlock
-//		myMachine.setLock(false);
+		// Lock.
+		myMachine.setLock(false);
 	}
 }

@@ -35,6 +35,8 @@ public class TemperatureController extends PeriodicThread {
 	private void stopAllHeating() {
 		mode = TemperatureEvent.TEMP_IDLE;
 		continueHeating = false;
+		machine.setHeating(false);
+		replyToEvent(lastEvent, currentTemp);
 	}
 
 	private void replyToEvent(TemperatureEvent event, double temp) {
@@ -54,8 +56,6 @@ public class TemperatureController extends PeriodicThread {
 	
 	public void perform() {
 
-		TemperatureEvent event = (TemperatureEvent) this.mailbox.tryFetch();
-		
 		currentTemp = machine.getTemperature();
 		
 		if (continueHeating) {
@@ -67,6 +67,8 @@ public class TemperatureController extends PeriodicThread {
 				heaterOn = false;
 			}
 		}
+
+		TemperatureEvent event = (TemperatureEvent) this.mailbox.tryFetch();
 
 		if (event != null) {
 			lastEvent = event;
@@ -84,8 +86,10 @@ public class TemperatureController extends PeriodicThread {
 					heaterOn = true;
 				}
 			} else { // Temperature does match.
+				if (!continueHeating) {
+					replyToEvent(lastEvent, currentTemp);
+				}
 				continueHeating();
-				replyToEvent(lastEvent, currentTemp);
 			}
 		}
 	}
