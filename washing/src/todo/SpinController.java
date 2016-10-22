@@ -16,10 +16,11 @@ public class SpinController extends PeriodicThread {
 	private int previousSpin;
 	private int currentSpin;
 	private int interval = 60;
+	private static final int secPerPoll = 10;
 
 	
 	public SpinController(AbstractWashingMachine mach, double speed) {
-		super((long) (1000/speed)); // 1/sec.
+		super((long) (secPerPoll*1000/speed)); // 1/secPerPoll.
 		this.machine = mach;
 		previousSpin = AbstractWashingMachine.SPIN_LEFT;
 		currentSpin = AbstractWashingMachine.SPIN_RIGHT;
@@ -65,8 +66,8 @@ public class SpinController extends PeriodicThread {
 			elapsedSeconds %= interval;
 		}
 		
-		if (counterRunning) {
-			elapsedSeconds++;
+		if (counterRunning) { // Adjust "timer" based on number of seconds that elapsed since polling.
+			elapsedSeconds += secPerPoll;
 		}
 	}
 }

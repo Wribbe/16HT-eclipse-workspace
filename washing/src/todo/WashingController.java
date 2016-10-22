@@ -1,11 +1,12 @@
 package todo;
 
 import done.*;
+import todo.WashingProgram.WashingDoneException;
 
 public class WashingController implements ButtonListener {	
 	
 	// ------------------------------------------------------------- Private variables.
-	private WashingProgram currentProgram = null;
+	private ExtendedWashingProgram currentProgram = null;
 	private final int STOP = 0;
 	private AbstractWashingMachine machine;
 	private double speed;
@@ -28,8 +29,12 @@ public class WashingController implements ButtonListener {
     	water.start();
     }
     
-    private boolean programIsRunning() {
+    private boolean programBound() {
     	return currentProgram != null;
+    }
+    
+    private boolean programRunning() {
+    	return programBound() && !currentProgram.done;
     }
     
     private boolean emergencyStopPressed(int button) {
@@ -38,20 +43,24 @@ public class WashingController implements ButtonListener {
     
     public void processButton(int button) {
     	
-    	if (programIsRunning() && emergencyStopPressed(button)) {
-    		System.out.println("Abort!");
-    		currentProgram.interrupt();
-    	} else if (emergencyStopPressed(button) || (programIsRunning() && !emergencyStopPressed(button))) {
-    		// * Ignore emergency stop if not running.
-    		// * Ignore program buttons when program is running. 
-    	} else { // Set prorgam and start it.
-			setProgram(button);
-			currentProgram.start();
+    	if (programRunning()) {
+    		if (emergencyStopPressed(button)) {
+    			ExtendedWashingProgram programToBeAborted = currentProgram;
+    			currentProgram = null;
+    			programToBeAborted.interrupt();
+    		} else {
+    			// Ignore all other button presses when running.
+    		}
+    	} else { // Nothing running, set a program and start.
+			setProgram(button); 
+			if (programBound()) {
+				currentProgram.start();
+			}
     	}
     }
     
     private void setProgram(int button) {
-    	WashingProgram program = null; 
+    	ExtendedWashingProgram program = null; 
     	switch(button) {
 			case 1: program = new WashingProgram1(machine, speed, temp, water, spin);
 			break;

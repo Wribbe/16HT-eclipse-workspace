@@ -46,6 +46,7 @@ public abstract class WashingProgram extends RTThread {
 	 * @param   waterController  The WaterController to use
 	 * @param   spinController   The SpinController to use
 	 */
+	public boolean done = false;
 	protected WashingProgram(AbstractWashingMachine mach,
 			double speed,
 			TemperatureController tempController,
@@ -74,6 +75,7 @@ public abstract class WashingProgram extends RTThread {
 		try {
 			wash();
 		}
+
 		catch (InterruptedException e) {
 			wasInterrupted = true;
 		}
@@ -90,6 +92,7 @@ public abstract class WashingProgram extends RTThread {
 			mySpinController.putEvent(
 					new SpinEvent(this, SpinEvent.SPIN_OFF));
 		}
+		done = true;
 	}
 
 	// ------------------------------------------------------ ABSTRACT METHODS
@@ -127,5 +130,7 @@ public abstract class WashingProgram extends RTThread {
 	 * The spin controller
 	 */
 	protected SpinController mySpinController;
+	
+	class WashingDoneException extends InterruptedException {};
 }
 

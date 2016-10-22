@@ -8,7 +8,6 @@ import done.AbstractWashingMachine;
 public class WaterController extends PeriodicThread {
 	
 	private AbstractWashingMachine machine;
-//	private double speed;
 	
 	
 	private double wantedLevel = 0;
@@ -21,9 +20,8 @@ public class WaterController extends PeriodicThread {
 	private WaterEvent lastEvent = null;
 	
 	public WaterController(AbstractWashingMachine mach, double speed) {
-		super((long) (100)); // TODO: replace with suitable period
+		super((long)(1000/speed)); // 1/sec.
 		machine = mach;
-//		this.speed = speed;
 	}
 	
 	private boolean levelLowerThenWanted() {
@@ -44,6 +42,13 @@ public class WaterController extends PeriodicThread {
 		((RTThread)event.getSource()).putEvent(replyEvent);
 	}
 
+	private void turnAllOff() {
+		machine.setFill(false);
+		machine.setDrain(false);
+		pumpOn = false;
+		drainOn = false;
+	}
+
 	public void perform() {
 
 		WaterEvent getEvent = (WaterEvent)this.mailbox.tryFetch();
@@ -61,7 +66,7 @@ public class WaterController extends PeriodicThread {
 				machine.setFill(true);
 				pumpOn = true;
 				System.out.println("Starting pump.");
-			} if(pumpOn && !levelLowerThenWanted()) { // Turn of pump, level matched.
+			} if(!levelLowerThenWanted()) { // Turn off pump, level matched.
 				setIdle();
 				replyToEvent(lastEvent, currentLevel);
 			}
@@ -70,15 +75,15 @@ public class WaterController extends PeriodicThread {
 				machine.setDrain(true);
 				drainOn = true;
 				System.out.println("Starting drain.");
-			} else if(drainOn && !levelHigherThenWanted()) { // Turn of drain, level matched.
+			} else if(!levelHigherThenWanted()) { // Turn off drain, level matched.
 				setIdle();
 				replyToEvent(lastEvent, currentLevel);
 			}
 		} else { // Mode set to idle.
-			machine.setFill(false);
-			machine.setDrain(false);
-			pumpOn = false;
-			drainOn = false;
+			turnAllOff();
+			if (getEvent != null) {
+				replyToEvent(lastEvent, currentLevel);
+			}
 		}
 	}
 }

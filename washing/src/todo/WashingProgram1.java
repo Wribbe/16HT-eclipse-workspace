@@ -19,17 +19,8 @@ import done.*;
  *   <LI>Unlocks the hatch.
  * </UL>
  */
-class WashingProgram1 extends WashingProgram {
-
-	// ------------------------------------------------------------- CONSTRUCTOR
-
-	/**
-	 * @param   mach             The washing machine to control
-	 * @param   speed            Simulation speed
-	 * @param   tempController   The TemperatureController to use
-	 * @param   waterController  The WaterController to use
-	 * @param   spinController   The SpinController to use
-	 */
+class WashingProgram1 extends ExtendedWashingProgram {
+	
 	public WashingProgram1(AbstractWashingMachine mach,
 			double speed,
 			TemperatureController tempController,
@@ -37,87 +28,35 @@ class WashingProgram1 extends WashingProgram {
 			SpinController spinController) {
 		super(mach, speed, tempController, waterController, spinController);
 	}
-	
-	// ---------------------------------------------------------- PUBLIC METHODS
-	
-	private long waitTime(int minutes) {
-		return (long)(1000*60*minutes/mySpeed);
-	}
 
-	/**
-	 * This method contains the actual code for the washing program. Executed
-	 * when the start() method is called.
-	 */
 	protected void wash() throws InterruptedException {
-
-		// Wash cycle.
-//		int minutes = 30;
-		int washMinutes = 10;
-
-		// Rince cycle.
-		int rinceMinutes = 2;
-		int rinceMax = 5;
-		int currentRince = 0;
 		
-		// Centrifuge cycle.
+		int preTemperature = 40;
+		int temperature = 90;
+
+		int preWashMinutes = 15;
+		int washMinutes = 30;
+
+		int rinceMinutes = 2;
+		int rinceCycles = 5;
+		
 		int centrifugeMinutes = 5;
 		
-		// Lock.
-		myMachine.setLock(true);
+		lock();
 		
-		// 1/2 machine = 10L = 0.5.
+		// Pre-wash.
+		fillTo(0.5);
+		tempOn(preTemperature);
+		slowSpin(preWashMinutes);
+		drain();
 		
-		// Fill with water. 
-		myWaterController.putEvent(new WaterEvent(this,
-				WaterEvent.WATER_FILL,
-				0.5));
-		mailbox.doFetch(); // Wait for Ack
-		
-		// Set temperature.
-		myTempController.putEvent(new TemperatureEvent(this,
-				TemperatureEvent.TEMP_SET,
-				30.0));
-		mailbox.doFetch(); // Wait for Ack
-		
-
-		mySpinController.putEvent(new SpinEvent(this, SpinEvent.SPIN_SLOW));
-		sleep(waitTime(washMinutes));
-		mySpinController.putEvent(new SpinEvent(this, SpinEvent.SPIN_OFF));
-		mailbox.doFetch(); // Wait for Ack
-		
-		// Turn of temperature.
-		myTempController.putEvent(new TemperatureEvent(this,
-				TemperatureEvent.TEMP_IDLE,
-				00.0));
-		mailbox.doFetch(); // Wait for Ack
-		
-		// Drain
-		myWaterController.putEvent(new WaterEvent(this,
-				WaterEvent.WATER_DRAIN,
-				0.0));
-		mailbox.doFetch(); // Wait for Ack
-		
-		while(currentRince < rinceMax) {
-			// Fill up.
-			myWaterController.putEvent(new WaterEvent(this,
-					WaterEvent.WATER_FILL,
-					0.5));
-			mailbox.doFetch(); // Wait for Ack
-			sleep(waitTime(rinceMinutes));
-			currentRince++;
-			// Drain.
-			myWaterController.putEvent(new WaterEvent(this,
-					WaterEvent.WATER_DRAIN,
-					0.0));
-			mailbox.doFetch(); // Wait for Ack
-		}
-		
-		mySpinController.putEvent(new SpinEvent(this, SpinEvent.SPIN_FAST));
-		sleep(waitTime(centrifugeMinutes));
-		mySpinController.putEvent(new SpinEvent(this, SpinEvent.SPIN_OFF));
-		mailbox.doFetch(); // Wait for Ack
-
-		// Lock.
-		myMachine.setLock(false);
+		// Main wash program.
+		fillTo(0.5);
+		tempOn(temperature);
+		slowSpin(washMinutes);
+		drain();
+		rince(rinceMinutes, rinceCycles);
+		centrifuge(centrifugeMinutes);
+		unlock();
 	}
 }
