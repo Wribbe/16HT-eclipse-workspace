@@ -19,9 +19,9 @@ import done.*;
  *   <LI>Unlocks the hatch.
  * </UL>
  */
-class WashingProgram3 extends ExtendedWashingProgram {
+class WashingProgram1 extends ExtendedWashingProgram {
 	
-	public WashingProgram3(AbstractWashingMachine mach,
+	public WashingProgram1(AbstractWashingMachine mach,
 			double speed,
 			TemperatureController tempController,
 			WaterController waterController,
@@ -30,8 +30,33 @@ class WashingProgram3 extends ExtendedWashingProgram {
 	}
 
 	protected void wash() throws InterruptedException {
-		tempOff();
+		
+		int preTemperature = 40;
+		int temperature = 90;
+
+		int preWashMinutes = 15;
+		int washMinutes = 30;
+
+		int rinceMinutes = 2;
+		int rinceCycles = 5;
+		
+		int centrifugeMinutes = 5;
+		
+		lock();
+		
+		// Pre-wash.
+		fillTo(0.5);
+		tempOn(preTemperature);
+		slowSpin(preWashMinutes);
 		drain();
+		
+		// Main wash program.
+		fillTo(0.5);
+		tempOn(temperature);
+		slowSpin(washMinutes);
+		drain();
+		rince(rinceMinutes, rinceCycles);
+		centrifuge(centrifugeMinutes);
 		unlock();
 	}
 }
